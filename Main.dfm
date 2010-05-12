@@ -1,9 +1,9 @@
 object MainForm: TMainForm
   Left = 871
   Top = 555
-  Width = 401
-  Height = 127
   Caption = 'UniUpload'
+  ClientHeight = 91
+  ClientWidth = 385
   Color = clBtnFace
   Constraints.MinWidth = 300
   Font.Charset = DEFAULT_CHARSET

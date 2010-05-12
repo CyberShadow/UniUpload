@@ -14,6 +14,8 @@ uses
   //CyberShadow in 'CyberShadow.pas';
   Custom in 'Custom.pas';
 
+{$I version.inc}
+
 function GetSystemPath(Folder: Integer): string;
 var
   PIDL: PItemIDList;
@@ -52,7 +54,7 @@ begin
   if ParamCount=0 then
     begin
     WriteLn(
-      'UniUpload v1.33'#13#10+
+      'UniUpload v'+Version+#13#10+
       '© 2005-2009 Vladimir Panteleev <thecybershadow@gmail.com>'#13#10+
       //'Dedicated to Phuzion'#13#10+
       ''#13#10+

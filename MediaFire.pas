@@ -113,14 +113,16 @@ begin
 
     if Pos('''', S)=0 then
       raise Exception.Create('Can''t find file key in response');
-    Delete(S, 1, Pos('''', S));
+    Delete(S, 1, Pos(', ''', S)+2);
     FileKey := Copy(S, 1, Pos('''', S)-1);
+    //WriteLn(FileKey);
 
     //MessageBox(0, PChar(FileKey), 'FileKey', 0);
 
     repeat
       Sleep(250);
       S := HTTP.Get('http://www.mediafire.com/basicapi/pollupload.php?key=' + FileKey + '&MFULConfig=' + MFULConfig);
+      //WriteLn(S);
       
       E := TNode.Create; E.Parse(S);
       Description := E.FindByPath('\RESPONSE\DOUPLOAD\DESCRIPTION').AsText;

@@ -35,7 +35,7 @@ const
      '------------'+BoundaryTag+#13#10+
      'Content-Disposition: form-data; name="uploadtype"'#13#10+
      ''#13#10+
-     'on'#13#10+
+     '0'#13#10+
      '------------'+BoundaryTag+#13#10+
      'Content-Disposition: form-data; name="fileupload"; filename="%filename%"'#13#10+
      'Content-Type: image/png'#13#10+
@@ -44,11 +44,11 @@ const
      '------------'+BoundaryTag+#13#10+
      'Content-Disposition: form-data; name="url"'#13#10+
      ''#13#10+
-     'paste image url here'#13#10+
+     ''#13#10+
      '------------'+BoundaryTag+#13#10+
      'Content-Disposition: form-data; name="MAX_FILE_SIZE"'#13#10+
      ''#13#10+
-     '3145728'#13#10+
+     '13145728'#13#10+
      '------------'+BoundaryTag+#13#10+
      'Content-Disposition: form-data; name="refer"'#13#10+
      ''#13#10+
@@ -98,7 +98,7 @@ begin
 
     CreateHttp;
     LoadCookies('http://imageshack.us/');
-    S:=HTTP.Post('http://imageshack.us/', M);
+    S:=HTTP.Post('http://post.imageshack.us/', M);
   except
     on E: Exception do
     begin
@@ -138,12 +138,13 @@ begin
       Results[High(Results)].URL:=True;
     end;
 
-    RE.Expression := 'value="(http://img[0-9]+\.imageshack\.us/img[0-9]+/[0-9]+/[^"]+)"';
+    // http://img98.imageshack.us/img98/4412/azunew.gif
+    RE.Expression := '(value="|>)(http://img[0-9]+\.imageshack\.us/img[0-9]+/[0-9]+/[^"<]+)("|<)';
     if RE.Exec(S) then
     begin
       SetLength(Results, Length(Results)+1);
       Results[High(Results)].Name:='Direct link';
-      Results[High(Results)].Value:=RE.Match[1];
+      Results[High(Results)].Value:=RE.Match[2];
       Results[High(Results)].URL:=True;
     end;
     

@@ -43,6 +43,7 @@ uses
   PngImage;
 
 {$R *.dfm}
+{$I version.inc}
 
 var
   FileName: string;
@@ -268,7 +269,7 @@ begin
   if ParamCount=0 then
     begin
     MessageBox(0, PChar(
-      'UniUpload v1.37'#13#10+
+      'UniUpload v'+Version+#13#10+
       '© 2005-2010 Vladimir Panteleev <thecybershadow@gmail.com>'#13#10+
       //'Dedicated to Phuzion'#13#10+
       ''#13#10+
