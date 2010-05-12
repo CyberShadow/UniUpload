@@ -115,24 +115,49 @@ begin
   M.SaveToFile('result.html');}
 
   try
-    SetLength(Results, 2);
-    // value="http://img155.imageshack.us/my.php?image=scrshot2dc1.png"
-    // value="http://img155.imageshack.us/img155/4831/scrshot2dc1.png"
+    // http://img155.imageshack.us/my.php?image=scrshot2dc1.png
+    // http://img155.imageshack.us/img155/4831/scrshot2dc1.png
+    // http://img200.imageshack.us/i/lastfmf.png/
     RE:=TRegExpr.Create;
     
-    RE.Expression := 'value="(http://img[0-9]+\.imageshack\.us/my\.php\?image=[^"]+)"';
-    if not RE.Exec(S) then
-      raise Exception.Create('Can''t find "Show image link" by regexp');
-    Results[0].Name:='Show image link';
-    Results[0].Value:=RE.Match[1];
-    Results[0].URL:=True;
+    RE.Expression := '"(http://img[0-9]+\.imageshack\.us/my\.php\?image=[^"]+)"';
+    if RE.Exec(S) then
+    begin
+      SetLength(Results, Length(Results)+1);
+      Results[High(Results)].Name:='Show image link (old)';
+      Results[High(Results)].Value:=RE.Match[1];
+      Results[High(Results)].URL:=True;
+    end;
 
-    RE.Expression := 'value="(http://img[0-9]+\.imageshack\.us/img[0-9]+/[0-9]+/[^"]+)"';
-    if not RE.Exec(S) then
-      raise Exception.Create('Can''t find "Direct link" by regexp');
-    Results[1].Name:='Direct link';
-    Results[1].Value:=RE.Match[1];
-    Results[1].URL:=True;
+    RE.Expression := '"(http://img[0-9]+\.imageshack\.us/i/[^/]+/)"';
+    if RE.Exec(S) then
+    begin
+      SetLength(Results, Length(Results)+1);
+      Results[High(Results)].Name:='Show image link';
+      Results[High(Results)].Value:=RE.Match[1];
+      Results[High(Results)].URL:=True;
+    end;
+
+    RE.Expression := '"(http://img[0-9]+\.imageshack\.us/img[0-9]+/[0-9]+/[^"]+)"';
+    if RE.Exec(S) then
+    begin
+      SetLength(Results, Length(Results)+1);
+      Results[High(Results)].Name:='Direct link';
+      Results[High(Results)].Value:=RE.Match[1];
+      Results[High(Results)].URL:=True;
+    end;
+    
+    RE.Expression := '"(http://yfrog.com/[^"]+)"';
+    if RE.Exec(S) then
+    begin
+      SetLength(Results, Length(Results)+1);
+      Results[High(Results)].Name:='Short link';
+      Results[High(Results)].Value:=RE.Match[1];
+      Results[High(Results)].URL:=True;
+    end;
+    
+    if Length(Results)=0 then
+      raise Exception.Create('Can''t find any links');
   except
     on E: Exception do
     begin

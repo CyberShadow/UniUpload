@@ -44,6 +44,13 @@ uses
 
 {$R *.dfm}
 
+var
+  FileName: string;
+  Fields: array of TField;
+  Uploader: TUploader;
+  FileLength: Integer;
+  StartTime, EndTime: TDateTime;
+
 procedure TMainForm.AddField(FieldType: TFieldType; FieldName: string);
 var
   I, TotalTop: Integer;
@@ -261,7 +268,7 @@ begin
   if ParamCount=0 then
     begin
     MessageBox(0, PChar(
-      'UniUpload v1.33'#13#10+
+      'UniUpload v1.34'#13#10+
       '© 2005-2009 Vladimir Panteleev <thecybershadow@gmail.com>'#13#10+
       //'Dedicated to Phuzion'#13#10+
       ''#13#10+
