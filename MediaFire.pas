@@ -13,7 +13,8 @@ type
 implementation
 
 uses 
-  //Windows, 
+  //Windows,
+  Parser2, 
   Classes;
 
 function TMyUploader.GetName: string;
@@ -23,18 +24,18 @@ end;
 
 const
   p1 = '------------'+BoundaryTag+#13#10;
-  Letters = '2359abcdfghlmnqrtuvwxyz';
-  QK_Lookup = '"sharedtabsfileinfo1-qk" value="';
 
 procedure TMyUploader.Execute;
 var
   F, M: TMemoryStream;
-  S, S2, ID: string;
+  S, User, UKey, UploadSession, FolderKey, TrackKey, MFULConfig, FileKey, Description, QuickKey, FileError: String;
+  E: TNode;
   I: Integer;
 begin
   FreeOnTerminate:=False;
   Status:=usInitializing;
   BytesDone:=0;
+  Randomize;
 
   //while not Terminated do Sleep(100);
 
@@ -43,86 +44,119 @@ begin
     F.LoadFromFile(FileName);
     F.Position:=0;
 
-    S:=p1+'Content-Disposition: form-data; name="file_name0"; filename="'+ExtractFileName(FileName)+'"'#13#10'Content-Type: text/plain'#13#10#13#10;
+    S := '';
+    CreateHttp;
+    HTTP.Request.Referer := 'http://www.mediafire.com/';
+    LoadCookies('http://www.mediafire.com/');
 
-    M:=TMemoryStream.Create;
-    M.Write(S[1], length(S));
+    if HTTP.CookieManager.CookieCollection.GetCookieIndex(0, 'ukey')=-1 then
+    begin
+      Status := usCustom; CustomStatus := 'Fetching new user key';
+      HTTP.Get('http://www.mediafire.com/');
+      I := HTTP.CookieManager.CookieCollection.GetCookieIndex(0, 'ukey');
+      if I=-1 then
+        raise Exception.Create('Can''t get "ukey" cookie')
+      else
+        UKey := HTTP.CookieManager.CookieCollection[I].Value;
+    end;
+
+    Status := usCustom; CustomStatus := 'Fetching uploader configuration';
+    S := HTTP.Get('http://www.mediafire.com/basicapi/uploaderconfiguration.php?' {+ IntToStr(20000 + Random(500))} + '20117');
+
+    CustomStatus := 'Parsing uploader configuration';
+    E := TNode.Create; E.Parse(S);
+    UploadSession := E.FindByPath('\MEDIAFIRE\CONFIG\UPLOAD_SESSION').AsText;
+    TrackKey      := E.FindByPath('\MEDIAFIRE\CONFIG\TRACKKEY').AsText;
+    try
+      FolderKey   := E.FindByPath('\MEDIAFIRE\CONFIG\FOLDERKEY').AsText;
+    except
+      FolderKey   := '';
+    end;
+    try
+      MFULConfig  := E.FindByPath('\MEDIAFIRE\MFULCONFIG').AsText;
+    except
+      MFULConfig  := '';
+    end;
+    if (E.FindByPath('\MEDIAFIRE\CONFIG\USER')<>nil) and (E.FindByPath('\MEDIAFIRE\CONFIG\UKEY')<>nil) then
+    begin
+      User := E.FindByPath('\MEDIAFIRE\CONFIG\USER').AsText;
+      UKey := E.FindByPath('\MEDIAFIRE\CONFIG\UKEY').AsText;
+    end
+    else
+    begin
+      I := HTTP.CookieManager.CookieCollection.GetCookieIndex(0, 'user');
+      if I=-1 then
+        User := 'x'
+      else
+        User := HTTP.CookieManager.CookieCollection[I].Value;
+      I := HTTP.CookieManager.CookieCollection.GetCookieIndex(0, 'ukey');
+      if I=-1 then
+        raise Exception.Create('No ukey?')
+      else
+        UKey := HTTP.CookieManager.CookieCollection[I].Value;
+    end;
+    E.Free;
+
+    Status := usInitializing;
+    
+    M := TMemoryStream.Create;
+    S:=p1+'Content-Disposition: form-data; name="Filedata"; filename="'+ExtractFileName(FileName)+'"'#13#10'Content-Type: application/octet-stream'#13#10#13#10;
+    M.Write(S[1], Length(S));
     M.CopyFrom(F, F.Size);
-    S:=#13#10'------------'+BoundaryTag+'--'#13#10;
+    S := #13#10'------------'+BoundaryTag+'--'#13#10;
     M.Write(S[1], length(S));
     M.Position:=0;
 
-    CreateHttp;
-    HTTP.Request.Referer := 'http://www.mediafire.com/';
-    
-    Randomize;
-    ID := '';
-    for I:=1 to 11 do
-      ID := ID + Letters[Random(Length(Letters))+1];{}
+    S := 'http://www.mediafire.com/basicapi/douploadnonflash.php?ukey=' + UKey + '&user=' + User + '&uploadkey=' + FolderKey + '&filenum=0&uploader=0&MFULConfig=' + MFULConfig;
+    //MessageBox(0, PChar(S), 'URL', 0);
+    S := HTTP.Post(S, M);
 
-    LoadCookies('http://upload.mediafire.com/');
-    S:=HTTP.Post('http://upload.mediafire.com/' + ID + 'p0', M);
+    if Pos('''', S)=0 then
+      raise Exception.Create('Can''t find file key in response');
+    Delete(S, 1, Pos('''', S));
+    FileKey := Copy(S, 1, Pos('''', S)-1);
 
-    if Pos('url=', S)=0 then
-      raise Exception.Create('Invalid server response');
-    WriteLn(S);
-    Delete(S, 1, Pos('url=', S)+3);
-    S := Copy(S, 1, Pos('"', S)-1);
-    LoadCookies('http://www.mediafire.com/');
-    HTTP.Get(S);
+    //MessageBox(0, PChar(FileKey), 'FileKey', 0);
 
     repeat
       Sleep(250);
-      S := HTTP.Get('http://www.mediafire.com/dynamic/verifystatus.php?identifier='+ID);
+      S := HTTP.Get('http://www.mediafire.com/basicapi/pollupload.php?key=' + FileKey + '&MFULConfig=' + MFULConfig);
       
-      if Pos('</strong>', S)=0 then continue;
-      Delete(S, 1, Pos('</strong>', S)+9);
-      S2 := S;
-      Delete(S2, 1, Pos('|', S2));
-      Delete(S2, 1, Pos('|', S2));
-      S2 := Copy(S2, 1, Pos('|', S2)-1);
-      S := Copy(S, 1, Pos('|', S)-1);
-      CustomStatus := S + ' (' + S2 + '%)';
-      Status := usCustom;
-    until Pos('All done, links will be available in a moment', S)<>0;
-    CustomStatus := 'Fetching download link';
+      E := TNode.Create; E.Parse(S);
+      Description := E.FindByPath('\RESPONSE\DOUPLOAD\DESCRIPTION').AsText;
+      QuickKey    := E.FindByPath('\RESPONSE\DOUPLOAD\QUICKKEY').AsText;
+      FileError   := E.FindByPath('\RESPONSE\DOUPLOAD\FILEERROR').AsText;
+      E.Free;
 
-    S := HTTP.Get('http://www.mediafire.com/upload_complete.php?id='+ID);
-    if Pos(QK_Lookup, S)=0 then
-      raise Exception.Create('Can''t find quick key in response page!');
-    Delete(S, 1, Pos(QK_Lookup, S) + Length(QK_Lookup) - 1);
-    S := Copy(S, 1, Pos('"', S)-1);
+      CustomStatus := Description;
+      Status := usCustom;
+
+      if FileError<>'' then
+      begin
+        Status:=usError;
+        ErrorMessage := 'MediaFire error: ' + FileError;
+        Exit;
+      end;
+    until QuickKey<>'';
+
+    SetLength(Results, 1);
+    Results[0].Name:='Download link';
+    Results[0].Value:='http://www.mediafire.com/?' + QuickKey;
+    Results[0].URL:=True;
+
   except
     on E: Exception do
     begin
       Status:=usError;
-      ErrorMessage:=E.Message {+'(ID='+ID+')'};
+      if S<>'' then
+      begin
+        ErrorMessage:='Upload error "' + E.Message + '", response saved to BadResults.html';
+        SaveString(S, 'BadResults.html');
+      end
+      else
+        ErrorMessage:='Upload error "' + E.Message + '"';
       Exit;
     end;
-  end;
-
-  Status:=usParsingResults;
-  {M.Size:=0;
-  M.Position:=0;
-  M.Write(S[1], length(S));
-  M.SaveToFile('result.html');}
-
-  try
-    SetLength(Results, 1);
-    Results[0].Name:='Download link';
-    Results[0].Value:='http://www.mediafire.com/?' + S;
-    Results[0].URL:=True;
-
-    {
-    SetLength(Results, 2);
-    Results[1].Name:='ServerResponse';
-    Results[1].Value:=S;
-    {}
-  except
-    Status:=usError;
-    ErrorMessage:='Malformed results page (bad upload data?) - see BadResults.html';
-    SaveString(S, 'BadResults.html');
-    Exit;
   end;
 
   Status:=usDone;

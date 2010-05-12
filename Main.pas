@@ -268,8 +268,8 @@ begin
   if ParamCount=0 then
     begin
     MessageBox(0, PChar(
-      'UniUpload v1.34'#13#10+
-      '© 2005-2009 Vladimir Panteleev <thecybershadow@gmail.com>'#13#10+
+      'UniUpload v1.37'#13#10+
+      '© 2005-2010 Vladimir Panteleev <thecybershadow@gmail.com>'#13#10+
       //'Dedicated to Phuzion'#13#10+
       ''#13#10+
       'You didn''t specify a service and file(s) to upload.'#13#10+
@@ -548,7 +548,7 @@ begin
       usConnecting:
         S:='Connecting';
       usUploading:
-        S:=IntToStr(Min(100*Uploader.BytesDone div FileLength, 100))+'%';
+        S:=IntToStr(Min(100*Int64(Uploader.BytesDone) div FileLength, 100))+'%';
       usGettingResults:
         S:='Getting results';
       usParsingResults:

@@ -120,7 +120,7 @@ begin
     // http://img200.imageshack.us/i/lastfmf.png/
     RE:=TRegExpr.Create;
     
-    RE.Expression := '"(http://img[0-9]+\.imageshack\.us/my\.php\?image=[^"]+)"';
+    RE.Expression := 'value="(http://img[0-9]+\.imageshack\.us/my\.php\?image=[^"]+)"';
     if RE.Exec(S) then
     begin
       SetLength(Results, Length(Results)+1);
@@ -129,16 +129,16 @@ begin
       Results[High(Results)].URL:=True;
     end;
 
-    RE.Expression := '"(http://img[0-9]+\.imageshack\.us/i/[^/]+/)"';
+    RE.Expression := '(URL=|value=")(http://img[0-9]+\.imageshack\.us/i/[^/]+/)("|\])';
     if RE.Exec(S) then
     begin
       SetLength(Results, Length(Results)+1);
       Results[High(Results)].Name:='Show image link';
-      Results[High(Results)].Value:=RE.Match[1];
+      Results[High(Results)].Value:=RE.Match[2];
       Results[High(Results)].URL:=True;
     end;
 
-    RE.Expression := '"(http://img[0-9]+\.imageshack\.us/img[0-9]+/[0-9]+/[^"]+)"';
+    RE.Expression := 'value="(http://img[0-9]+\.imageshack\.us/img[0-9]+/[0-9]+/[^"]+)"';
     if RE.Exec(S) then
     begin
       SetLength(Results, Length(Results)+1);
@@ -147,7 +147,7 @@ begin
       Results[High(Results)].URL:=True;
     end;
     
-    RE.Expression := '"(http://yfrog.com/[^"]+)"';
+    RE.Expression := 'value="(http://yfrog.com/[^"]+)"';
     if RE.Exec(S) then
     begin
       SetLength(Results, Length(Results)+1);
