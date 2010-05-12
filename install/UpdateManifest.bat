@@ -1,0 +1,1 @@
+mt.exe -manifest "UniUpload_installer.exe.manifest" -outputresource:"UniUpload_installer.exe;#1"

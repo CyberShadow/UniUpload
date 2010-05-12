@@ -1,0 +1,6 @@
+*.dcu
+*.map
+/UniUpld.exe
+/UniUpldC.exe
+/install/UniUpload_installer.exe
+/shell/UniUpShl.dll

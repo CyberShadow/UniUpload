@@ -1,0 +1,156 @@
+UniUpload v1.38
+© 2005-2010 Vladimir Panteleev <thecybershadow@gmail.com>
+
+*** Usage ***
+After installation, you can upload files by right-clicking on 
+them in Windows Explorer and selecting "Upload to ...".
+This also works when you select multiple files.
+UniUpload supports uploading files to ImageShack.us (images only), 
+MediaFire.com, and to a custom script for your own webspace (see below).
+More public upload providers (like RapidShare.com) may be added in 
+the future.
+
+Information about all completed uploads will be logged to
+the file "My uploads.txt" in your "My Documents" folder.
+
+*** Screenshot upload ***
+Since 1.1, you can upload the current image in your clipboard.
+How to use:
+
+First of all, create a shortcut on your desktop/quick-launch/whatever
+pointing to:
+UniUpld.exe ImageShack Clipboard
+
+Whenever you want to upload a screenshot, first press [Print screen]
+to copy your desktop image to the clipboard, then open that shortcut.
+You can bind it to a hotkey (like Win+PrintScreen) using your shell 
+or something like AutoHotKey.
+Uploaded screenshots are saved to My Documents\My Pictures\Uploaded 
+pictures.
+
+*** Text snippet upload ***
+New in v1.3!
+Need to share a sizeable piece of text with someone? No more pastebins!
+You can now upload the text in your clipboard with UniUpload, the same
+way you upload screenshots. Just run "UniUpload <UploadProvider> 
+Clipboard" and UniUpload will upload a text file containing whatever
+text you have in your clipboard. These snippets are saved to your "My 
+Documents\Uploaded snippets" folder.
+
+*** Upload to your account ***
+New in v1.3!
+If you have an account on ImageShack or MediaFire, you can now upload
+directly to your account. All you have to do is to log in to your 
+account with Microsoft Internet Explorer - UniUpload will now import
+IE's cookies when uploading files.
+
+*** Custom upload scripts ***
+If you'd like to upload files to your webspace, follow these steps:
+
+1) Create an upload script with a secret URL. The only 
+   aunthentification is the URL, so keep it secure (remember to turn 
+   off directory listings).
+   The script should accept a file from an HTTP form with a file 
+   upload field named "uploaded". The script's only output should be 
+   either an error message, or a full URL (incl. http://) to the 
+   uploaded file's location.
+
+   Here's an example PHP upload script:
+
+==== 8< =============================
+<?php 
+// In this example, the script is situated on http://www.example.com/uploaded/your_secret_upload_script_file_name.php
+
+$target = basename( $_FILES['uploaded']['name']); 
+
+// You can add file extension checks here - for example, prohibit uploading .php files
+
+$md5 = md5_file($_FILES['uploaded']['tmp_name']);    // calculate the file's MD5 checksum
+if(!file_exists($md5)) mkdir($md5);                  // create a folder for this file
+if(move_uploaded_file($_FILES['uploaded']['tmp_name'], $md5 . "/" . $target)) 
+  echo "http://www.example.com/uploaded/$md5/".rawurlencode($target);   // return the full URL to the uploaded file
+else 
+  echo "Sorry, there was a problem uploading your file."; 
+?>
+============================= >8 ====
+
+2) Add the URL as a custom registry setting.
+   The custom upload providers are stored in the 
+   HKEY_CURRENT_USER\Software\UniUpload key, as REG_SZ (string) 
+   values, named "Custom#" - where # is the provider's number, 
+   starting from 0. Here's an example registry script:
+
+==== 8< =============================
+REGEDIT4
+
+[HKEY_CURRENT_USER\Software\UniUpload]
+"Custom0"="http://www.example.com/secret_upload_script.php"
+============================= >8 ====
+
+   After adding the custom upload script to the registry, an "Upload to
+   www.example.com" item should appear in the right-click menu of all files.
+   To upload clipboard content, use the domain name (e.g. "www.example.com") 
+   as the upload provider, for example: 
+     UniUpld.exe www.example.com Clipboard
+
+   WARNING: If someone will find the address of your upload script, 
+   they will be able to upload any content to your web space - including 
+   executable scripts, unless you took precautions. I strongly recommend 
+   giving the upload script a long and cryptic filename. You should guard 
+   your registry settings as well, since they allow uploading random 
+   content to your web site.
+
+You can also "upload" to a local HTTP/FTP server, by making UniUpload 
+copy the file to the relevant folder, and return an external link. This
+allows sharing files quickly if you have an HTTP or FTP server running. To
+do that, add a custom upload provider in the following format:
+
+    Name|C:\Full\Path\To\Your\Local\Folder|http://your.ip.or.hostname/path/to/remote/folder/
+
+Example registry script:
+
+==== 8< =============================
+REGEDIT4
+
+[HKEY_CURRENT_USER\Software\UniUpload]
+"Custom0"="HomeFTP|C:\\FTP\\pub\\Requested\\|ftp://127.0.0.1/pub/Requested/"
+============================= >8 ====
+
+Thus, when you select "Upload to HomeFTP", UniUpload will copy the file
+to C:\FTP\pub\Requested\ and give you a link via your FTP.
+
+*** Version history ***
+ 1.38 - fixed ImageShack
+ 1.37 - fixed MediaFire
+ 1.36 - fixed ImageShack
+ 1.35 - new MediaFire uploader
+ 1.34 - fixed ImageShack (new link format), added new ImageShack short URLs
+      - added simple command-line upload utility, UniUpldC.exe
+ 1.33 - greatly improved upload speeds for fast connections
+ 1.32 - fixed ImageShack (they now redirect to result page)
+ 1.31 - fixed ImageShack, hopefully once and for all (now using regexps)
+ 1.3  - fixed ImageShack
+      - added MediaFire!
+      - added uploading of text snippets! (current text in clipboard)
+      - added IE cookie support!
+      - added custom local "uploader"!
+ 1.2  - removed RapidShare.de, added custom upload providers
+      - created website ( http://uniupload.thecybershadow.net/ )
+ 1.15 - fixed rapidshare (they changed their servers oslt)
+ 1.14 - fixed imageshack
+ 1.13 - rewrote rapidshare parsing method, hopefully once and for all
+ 1.12 - fixed rapidshare, again
+ 1.11 - fixed rapidshare
+ 1.1  - fixed imageshack link bug (three times)
+      - rapidshare changed their layout... four times.
+      - in case of a parse error, the results page will be saved 
+        to BadResults.html
+      - fixed an overflow caused by large files.
+      - added clipboard image upload
+ 1.0  - first version
+
+Full Delphi source code is available on request.
+
+Enjoy!
+
+  -- CyberShadow

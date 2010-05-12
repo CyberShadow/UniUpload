@@ -1,0 +1,65 @@
+; Register the UniUpShl.dll for all filetypes.
+; Author: Troels Jakobsen.
+
+[version]
+signature="$CHICAGO$"
+SetupClass=BASE
+
+[DefaultInstall]
+CopyFiles=ThisDll.sys.install,ThisExe.sys.install
+AddReg=ThisDll.Add.Reg,ThisDll.Uninst.Reg
+
+[DefaultUninstall]
+DelFiles=ThisDll.sys.install,ThisExe.sys.install
+DelReg=ThisDll.Add.Reg,ThisDll.Uninst.Reg
+
+[ThisDll.Add.Reg]
+HKCR,CLSID\%GUID%,,,"%Target_DESC%"
+HKCR,CLSID\%GUID%\InProcServer32,,,"%11%\%SubDir%\%ThisDll%"
+HKCR,CLSID\%GUID%\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,*\%FileTypePath%,,,"%GUID%"
+
+[ThisDll.Uninst.Reg]
+HKLM,%UNINST%,,,
+HKLM,%UNINST%,"DisplayName",,"%Target_Uninstall_DESC%"
+;;;HKLM,%UNINST%,"UninstallString",,"rundll32 setupx.dll,InstallHinfSection DefaultUninstall 4 %11%\%SubDir%\%ThisInf%"
+;HKLM,%UNINST%,"UninstallString",,"rundll32.exe syssetup.dll,SetupInfObjectInstallAction Target_remove 4 %11%\%SubDir%\%ThisInf%"
+HKLM,%UNINST%,"UninstallString",,"rundll32.exe setupapi,InstallHinfSection defaultuninstall 132 %11%\%SubDir%\%ThisInf%"
+
+[ThisDll.Uninst.Reg.NT]
+HKLM,%UNINST%,,,
+HKLM,%UNINST%,"DisplayName",,"%Target_Uninstall_DESC%"
+;;;HKLM,%UNINST%,"UninstallString",,"rundll32.exe %11%\%SubDir%\%ThisDll%,Uninstall %11%\%SubDir%\%ThisInf%"
+HKLM,%UNINST%,"UninstallString",,"rundll32.exe syssetup.dll,SetupInfObjectInstallAction Target_remove 4 %11%\%SubDir%\%ThisInf%"
+
+[DestinationDirs]
+ThisDll.sys.install=11,%SubDir%     ; copy to System\%SubDir%
+ThisExe.sys.install=11      ; copy to System
+
+[SourceDisksNames]
+55="%Target_DESC%","",1
+
+[SourceDisksFiles]
+%ThisDll%=55
+
+;;;;;;;;;;;;;;;;;;; Custom constants ;;;;;;;;;;;;;;;;;;;
+
+[ThisDll.sys.install]
+UniUpShl.dll
+UniUpShl.inf
+
+[ThisExe.sys.install]
+UniUpld.exe
+UniUpldC.exe
+
+[Strings]
+SubDir = "ShellExt"
+Target_DESC = "UniUpload"
+Target_Uninstall_DESC = "UniUpload (Remove Only)"
+ThisDll = "UniUpShl.dll"
+ThisInf = "UniUpShl.inf"
+ThisExe = "UniUpld.exe"
+GUID = "{B33DE756-DEEE-4D7A-87DB-900854B1D3A4}"
+UNINST = "SoftWare\Microsoft\Windows\CurrentVersion\Uninstall\UniUpShl"
+FileTypePath = "ShellEx\ContextMenuHandlers\UniUpShl"
+
